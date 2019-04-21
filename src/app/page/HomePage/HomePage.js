@@ -1,7 +1,9 @@
 import React, { Component } from 'react'
 import { connect } from 'react-redux';
-import { fetchProducts } from '../../redux/actions/productActions'
-import { fetchProductTypes } from '../../redux/actions/productTypeActions'
+import { fetchProducts, deleteProduct, createProduct, updateProduct } from '../../redux/actions/productActions'
+import { fetchCategories } from '../../redux/actions/categoryActions'
+import ProductForm from './ProductForm/ProductForm'
+import ProductList from './ProductList/ProductList'
 import './HomePage.css'
 
 class HomePage extends Component {
@@ -16,8 +18,11 @@ class HomePage extends Component {
       minPrice: 0,
       maxPrice: 100000000,
       currentPage: 1,
+      products: [],
       lastPage: 1,
-      productPerPage: 6
+      productPerPage: 6,
+      isOpen: false,
+      selectedProduct: null
     };
   }
   prevPage = () => {
@@ -37,9 +42,10 @@ class HomePage extends Component {
     updatedList = updatedList.filter(function (product) {
       return (
         (product.productType && product.productType.search(typeKey) !== -1) &&
-        (product.name.toLowerCase().search(filterKey.toLowerCase()) !== -1)) && 
-        (product.price > minPrice && product.price < maxPrice)
-    });
+        (product.name.toLowerCase().search(filterKey.toLowerCase()) !== -1) && 
+        (parseFloat(product.price) >= minPrice) &&
+        (parseFloat(product.price) <= maxPrice)
+    )});
     this.setState({ filterProducts: updatedList, isFilter: true });
   }
   filterProductType = (productType) => {
@@ -75,12 +81,50 @@ class HomePage extends Component {
       productPerPage: 6
     })
   }
+
+  handleFormOpen = () => {
+    this.setState({
+      selectedEvent: null,
+      isOpen: true
+    });
+  };
+
+  handleCancel = () => {
+    this.setState({
+      isOpen: false
+    });
+  };
+  handleOpenProduct = (productToOpen) => {
+    this.setState({
+      isOpen: true,
+      selectedProduct: productToOpen
+    });
+  } 
+  handleUpdateProduct = (product) => {
+    this.setState({
+      isOpen: false
+    });
+    this.props.updateProduct(product);
+  }  
+  handleCreateProduct = (product) => {
+    this.setState({
+      isOpen: false
+    });
+    this.props.createProduct(product);
+  }  
+  handleDeleteProduct = (productId) => () => {
+    this.props.deleteProduct(productId);
+  }
+
   componentDidMount() {
     this.props.fetchProducts();
-    this.props.fetchProductTypes();
+    this.props.fetchCategories();
+  }
+  componentWillReceiveProps(nextProps){
+    this.setState({products:nextProps.products})
   }
   render() {
-    const { products, productTypes } = this.props;
+    const { categories, products } = this.props;
     const { currentPage, productPerPage, filterKey, isFilter, filterProducts } = this.state;
     let renderProducts = products;
     if (isFilter) {
@@ -92,10 +136,10 @@ class HomePage extends Component {
     const currentProducts = renderProducts.slice(indexOfFirstProduct, indexOfLastProduct);
 
     return (
-      <div className="container">
+      <div className="container-fluid">
         <div className="row">
-          <div className="col-md-4">
-          <button onClick={() => this.reset()} type="button" class="btn btn-danger">Reset</button>
+          <div className="col-md-3">
+          <button onClick={() => this.reset()} type="button" className="btn btn-danger btn-lg">Reset Filter</button>
             <h3>Search</h3>
 
             <div className="form-group">
@@ -124,13 +168,14 @@ class HomePage extends Component {
             <br />
             <h3>Filter by product type</h3>
             <ul className="list-group">
-              {productTypes && productTypes.map(productType =>
-                <li className="list-group-item"><a href="javascript:void(0)" onClick={() => this.filterProductType(productType.name)}>{productType.name}</a></li>
+              {categories && categories.map(category =>
+      // eslint-disable-next-line
+                <li key={category._id} className="list-group-item"><a href="javascript:void(0)" onClick={() => this.filterProductType(category.name)}>{category.name}</a></li>
               )}
             </ul>
 
           </div>
-          <div className="col-md-8">
+          <div className="col-md-5">
             <div className="well well-sm">
               <strong>Display </strong>
               <div className="btn-group">
@@ -144,50 +189,50 @@ class HomePage extends Component {
             </div>
             <div>
 
+            <nav aria-label="...">
+                <ul className="pager">
+                  <li className={'previous ' + (currentPage === 1 && 'disabled')}><button className="btn btn-default" disabled={currentPage === 1} onClick={this.prevPage}><span aria-hidden="true">←</span> Older</button></li>
+                  <li className={'next ' + (currentPage === numPages && 'disabled')}><button className="btn btn-default" disabled={currentPage === numPages} onClick={this.nextPage}>Newer <span aria-hidden="true">→</span></button></li>
+                </ul>
+              </nav>
 
             </div>
             <div>
 
 
             </div>
-            <div id="products" className="row list-group">
-              {currentProducts.length <= 0 && <h3>No product found</h3>}
-              {currentProducts.length > 0 && currentProducts.map(product => <div key={product._id} className={'item  col-xs-4 col-lg-4 ' + this.state.view}>
-                <div className="thumbnail">
-                  <img style={{ maxWidth: 200 }} className="group list-group-image" src={product.imageUrl} alt={product.name} />
-                  <div className="caption">
-                    <h4 className="group inner list-group-item-heading">
-                      {product.name}</h4>
-                    <p className="group inner list-group-item-text">
-                      {product.description}</p>
-                     <p className="group inner list-group-item-text">
-                      Type:  {product.productType}</p>
-                    <div className="row">
-                      <div className="col-xs-12 col-md-6">
-                        <p className="lead">
-                          {product.price} ₫</p>
-                      </div>
 
-                      <div className="col-xs-12 col-md-6">
-                        <a className="btn btn-success" href="http://www.jquery2dotnet.com">Add to cart</a>
-                      </div>
-                      <div className="clearfix" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-              )}
+        <ProductList 
+          products={currentProducts}
+          view={this.state.view}
+          handleOpenProduct={this.handleOpenProduct}
+          deleteProduct={this.handleDeleteProduct}
+          />
               <div className="clearfix" />
+             
               <nav aria-label="...">
                 <ul className="pager">
-                  <li className={'previous ' + (currentPage === 1 && 'disabled')}><button className="btn btn-default" disabled={currentPage == 1} onClick={this.prevPage}><span aria-hidden="true">←</span> Older</button></li>
-                  <li className={'next ' + (currentPage === numPages && 'disabled')}><button className="btn btn-default" disabled={currentPage == numPages} onClick={this.nextPage}>Newer <span aria-hidden="true">→</span></button></li>
+                  <li className={'previous ' + (currentPage === 1 && 'disabled')}><button className="btn btn-default" disabled={currentPage === 1} onClick={this.prevPage}><span aria-hidden="true">←</span> Older</button></li>
+                  <li className={'next ' + (currentPage === numPages && 'disabled')}><button className="btn btn-default" disabled={currentPage === numPages} onClick={this.nextPage}>Newer <span aria-hidden="true">→</span></button></li>
                   <p>Page {currentPage} / {numPages}</p>
                   <p>Products per page: {productPerPage} </p>
                   {filterKey !== '' && <p>Searching '{filterKey}'</p>}
                 </ul>
               </nav>
-            </div>
+
+      
+
+
+          </div>
+
+          <div className="col-md-4">
+          <button onClick={() => this.setState({isOpen:true})} type="button" className="btn btn-success btn-lg">Create Product</button>
+          {this.state.isOpen && <ProductForm 
+          handleUpdateProduct={this.handleUpdateProduct}
+          handleCreateProduct={this.handleCreateProduct}
+            initialValues={this.state.selectedProduct} 
+            handleCancel={this.handleCancel} 
+            />}
           </div>
 
         </div>
@@ -200,10 +245,13 @@ class HomePage extends Component {
 }
 const actions = {
   fetchProducts,
-  fetchProductTypes
+  fetchCategories,
+  deleteProduct,
+  createProduct,
+  updateProduct
 }
 const mapState = (state) => ({
-  products: state.product,
-  productTypes: state.productType
+  products: state.products,
+  categories: state.categories
 })
 export default connect(mapState, actions)(HomePage);
