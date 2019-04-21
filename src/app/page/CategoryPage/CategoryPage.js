@@ -38,6 +38,7 @@ class CategoryPage extends Component {
         this.props.fetchCategories();
       }
     render() {
+      
         return (
             <div className="container">
             <div className="row">
@@ -47,7 +48,7 @@ class CategoryPage extends Component {
 
                 <div className="col-md-8">
                 <button onClick={() => this.setState({isOpen:true})} type="button" className="btn btn-primary">Create</button>
-                    <CategoryList deleteCategory={this.props.deleteCategory} handleSelect={this.handleSelect} categories={this.props.categories} />
+                    <CategoryList loading={this.props.loading} deleteCategory={this.props.deleteCategory} handleSelect={this.handleSelect} categories={this.props.categories} />
                 </div>
                 </div>
             </div>
@@ -61,6 +62,7 @@ const actions = {
     deleteCategory
   }
   const mapState = (state) => ({
+    loading: state.async.loading,
     categories: state.categories
   })
   export default connect(mapState, actions)(CategoryPage);

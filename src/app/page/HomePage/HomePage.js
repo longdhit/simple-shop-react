@@ -5,7 +5,6 @@ import { fetchCategories } from '../../redux/actions/categoryActions'
 import ProductForm from './ProductForm/ProductForm'
 import ProductList from './ProductList/ProductList'
 import './HomePage.css'
-
 class HomePage extends Component {
   constructor(props) {
     super(props);
@@ -168,6 +167,7 @@ class HomePage extends Component {
             <br />
             <h3>Filter by product type</h3>
             <ul className="list-group">
+              {this.props.loading && <h3>Loading...</h3>}
               {categories && categories.map(category =>
       // eslint-disable-next-line
                 <li key={category._id} className="list-group-item"><a href="javascript:void(0)" onClick={() => this.filterProductType(category.name)}>{category.name}</a></li>
@@ -203,6 +203,7 @@ class HomePage extends Component {
             </div>
 
         <ProductList 
+          loading={this.props.loading}
           products={currentProducts}
           view={this.state.view}
           handleOpenProduct={this.handleOpenProduct}
@@ -252,6 +253,7 @@ const actions = {
 }
 const mapState = (state) => ({
   products: state.products,
+  loading: state.async.loading,
   categories: state.categories
 })
 export default connect(mapState, actions)(HomePage);

@@ -2,25 +2,28 @@ import axios from 'axios';
 import { toastr } from 'react-redux-toastr';
 import { CREATE_PRODUCT, DELETE_PRODUCT, UPDATE_PRODUCT, FETCH_PRODUCTS } from '../constants/productConstants';
 import { API } from '../../../config'
+import { asyncActionStart, asyncActionFinish, asyncActionError } from './asyncActions';
 
 export const fetchProducts = () => {
     return async (dispatch, getState) => {
+      dispatch(asyncActionStart());
         let axiosConfig = {
             headers: {
                 "Access-Control-Allow-Origin": "*",
             },
             crossDomain: true
         };
-        axios.get(`${API}/products`,axiosConfig)
+        await axios.get(`${API}/products`,axiosConfig)
         .then(res => {
           dispatch({ type: FETCH_PRODUCTS, payload: { products: res.data } });
         })
- 
+        dispatch(asyncActionFinish());
     }
 }
 
 export const createProduct = product => {
     return async dispatch => {
+      dispatch(asyncActionStart());
       try {
         let axiosConfig = {
           headers: {
@@ -36,10 +39,12 @@ export const createProduct = product => {
             product
           }
         });
+        dispatch(asyncActionFinish());
         toastr.success('Success', 'Product has been created')
       })
       
       } catch (error) {
+        dispatch(asyncActionError());
         toastr.error('Oops', 'Something went wrong')
       }
     };
@@ -47,6 +52,7 @@ export const createProduct = product => {
 
   export const updateProduct = product => {
     return async dispatch => {
+      dispatch(asyncActionStart());
       try {
         let axiosConfig = {
           headers: {
@@ -62,11 +68,13 @@ export const createProduct = product => {
             product
           }
         });
+        dispatch(asyncActionFinish());
         toastr.success('Success', 'Product has been updated')
       })
 
     
       } catch (error) {
+        dispatch(asyncActionError());
         toastr.error('Oops', 'Something went wrong')
       }
     };

@@ -5,6 +5,7 @@ class CategoryList extends Component {
         const { categories, handleSelect, deleteCategory } = this.props;
         return (
             <table className="table">
+                {this.props.loading && <h3>Loading...</h3>}
   <thead>
     <tr>
       <th>Name</th>

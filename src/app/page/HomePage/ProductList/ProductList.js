@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import {Link} from 'react-router-dom'
 
 
 class ProductList extends Component {
@@ -7,15 +8,15 @@ class ProductList extends Component {
 
     return (
         <div id="products" className="row list-group">
-    
-    {products.length <= 0 && <h3>No product found</h3>}
+    {this.props.loading && <h1>Loading...</h1>}
+    {(products.length <= 0 && !this.props.loading) &&  <h3>No product found</h3>}
         {products.length > 0 && products.map(product => 
         <div key={product._id} className={'item  col-xs-4 col-lg-4 ' + this.props.view}>
           <div className="thumbnail">
             <img style={{ maxWidth: 200 }} className="group list-group-image" src={product.imageUrl} alt={product.name} />
             <div className="caption">
-              <h4 className="group inner list-group-item-heading">
-                {product.name}</h4>
+            <Link to={`product/${product._id}`}><h4 className="group inner list-group-item-heading">
+                {product.name}</h4></Link>
               <p className="group inner list-group-item-text">
                 {product.description}</p>
                <p className="group inner list-group-item-text">
