@@ -98,11 +98,12 @@ export const deleteCategory = categoryId => {
               categoryId
             }
           });
+          dispatch(asyncActionFinish());
           toastr.success('Success', 'Category has been deleted')
         })
 
     } catch (error) {
-      dispatch(asyncActionFinish());
+      dispatch(asyncActionError());
       toastr.error('Oops', 'Something went wrong')
     }
   };
